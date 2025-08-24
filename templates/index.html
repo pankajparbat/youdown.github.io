@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>YouTube Video Downloader</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #fdfbfb, #ebedee);
+      color: #333;
+      margin: 0;
+      padding: 0;
+      text-align: center;
+    }
+
+    header {
+      padding: 30px;
+      background: rgba(255, 255, 255, 0.6);
+      backdrop-filter: blur(12px);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+
+    h1 {
+      margin: 10px 0;
+      font-size: 2.5rem;
+      color: #ff3b3b;
+    }
+
+    p {
+      margin: 0;
+      font-size: 1rem;
+      color: #555;
+    }
+
+    .container {
+      margin: 40px auto;
+      max-width: 650px;
+      padding: 25px;
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(15px);
+      border-radius: 20px;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+      transition: transform 0.3s ease;
+    }
+
+    .container:hover {
+      transform: scale(1.02);
+    }
+
+    input[type="text"] {
+      width: 70%;
+      padding: 14px;
+      border: 2px solid #ddd;
+      border-radius: 12px;
+      font-size: 1rem;
+      outline: none;
+      transition: 0.3s;
+    }
+
+    input[type="text"]:focus {
+      border-color: #ff3b3b;
+      box-shadow: 0 0 10px rgba(255, 59, 59, 0.3);
+    }
+
+    button {
+      padding: 14px 22px;
+      border: none;
+      background: #ff3b3b;
+      color: white;
+      border-radius: 12px;
+      font-size: 1rem;
+      cursor: pointer;
+      margin-left: 12px;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      background: #e60000;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(255, 59, 59, 0.3);
+    }
+
+    .result {
+      margin-top: 20px;
+      font-weight: 500;
+    }
+
+    /* Progress Bar */
+    .progress-container {
+      margin-top: 20px;
+      width: 100%;
+      background: rgba(0,0,0,0.1);
+      border-radius: 10px;
+      overflow: hidden;
+      display: none;
+    }
+
+    .progress-bar {
+      height: 20px;
+      width: 0%;
+      background: linear-gradient(90deg, #ff3b3b, #ff7b7b);
+      transition: width 0.4s ease;
+    }
+
+    .videos {
+      margin: 60px auto;
+      max-width: 1000px;
+    }
+
+    .videos h2 {
+      color: #444;
+      margin-bottom: 20px;
+    }
+
+    .video-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+    }
+
+    iframe {
+      width: 100%;
+      height: 200px;
+      border-radius: 15px;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+      transition: 0.3s;
+    }
+
+    iframe:hover {
+      transform: scale(1.05);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🎥 YouTube Downloader</h1>
+    <p>Download your favorite YouTube videos instantly</p>
+  </header>
+
+  <div class="container">
+    <form id="downloadForm">
+      <input type="text" id="videoUrl" placeholder="Enter YouTube video URL" required>
+      <button type="submit">Download</button>
+    </form>
+
+    <!-- Progress bar -->
+    <div class="progress-container" id="progressContainer">
+      <div class="progress-bar" id="progressBar"></div>
+    </div>
+
+    <div class="result" id="result"></div>
+  </div>
+
+  <section class="videos">
+    <h2>🔥 Trending YouTube Videos</h2>
+    <div class="video-grid">
+      <iframe src="https://www.youtube.com/embed/ljvm4ECJv-g" allowfullscreen></iframe>
+      <iframe src="https://www.youtube.com/embed/3JZ_D3ELwOQ" allowfullscreen></iframe>
+      <iframe src="https://www.youtube.com/embed/AQ-P5RR7r40" allowfullscreen></iframe>
+      <iframe src="https://www.youtube.com/embed/9bZkp7q19f0" allowfullscreen></iframe>
+    </div>
+  </section>
+
+  <script>
+    document.getElementById("downloadForm").addEventListener("submit", async function(e) {
+      e.preventDefault();
+      const url = document.getElementById("videoUrl").value;
+      const progressContainer = document.getElementById("progressContainer");
+      const progressBar = document.getElementById("progressBar");
+      const resultDiv = document.getElementById("result");
+
+      resultDiv.innerHTML = "";
+      progressBar.style.width = "0%";
+      progressContainer.style.display = "block";
+
+      try {
+        const response = await fetch("/download", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ videoUrl: url })
+        });
+
+        if (response.ok) {
+          let progress = 0;
+          const interval = setInterval(() => {
+            if (progress < 90) {
+              progress += 10;
+              progressBar.style.width = progress + "%";
+            }
+          }, 400);
+
+          const blob = await response.blob();
+          clearInterval(interval);
+          progressBar.style.width = "100%";
+
+          const a = document.createElement("a");
+          a.href = window.URL.createObjectURL(blob);
+          a.download = "video.mp4";
+          a.click();
+
+          resultDiv.innerHTML = "<p style='color:green'>✅ Download completed!</p>";
+        } else {
+          progressContainer.style.display = "none";
+          resultDiv.innerHTML = "<p style='color:red'>❌ Failed to download video.</p>";
+        }
+      } catch (err) {
+        progressContainer.style.display = "none";
+        resultDiv.innerHTML = "<p style='color:red'>⚠️ Error: " + err.message + "</p>";
+      }
+    });
+  </script>
+</body>
+</html>
