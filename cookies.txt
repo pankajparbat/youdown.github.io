@@ -1,0 +1,5 @@
+ydl_opts = {
+    "outtmpl": file_path,
+    "format": "best",
+    "cookiefile": "cookies.txt"
+}
